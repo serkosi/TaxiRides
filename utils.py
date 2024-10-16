@@ -103,12 +103,3 @@ def read_parquet_file(file_path):
     except Exception as e:
         logger.error(f"Unexpected error reading file: {str(e)}")
         raise
-
-#def save_to_parquet(df, file_path):
-#    """Save DataFrame to Parquet file."""
-#    try:
-#        df.to_parquet(file_path, engine='pyarrow')
-#        logger.info(f"DataFrame saved as parquet file at: {file_path}")
-#    except Exception as e:
-#        logger.error(f"Error saving to parquet file: {str(e)}")
-#        raise

@@ -1,0 +1,8 @@
+api:
+  base_url: "https://data.cityofnewyork.us/resource/4b4i-vvec.json" # base url was generated with the dataset identifier: 4b4i-vvec belonging to "2023 Yellow Taxi Trip Data".
+  limit: 50000
+date_ranges: # For the sake of fast data retrieval only one month is taken into consideration as a starting point in task-1. The following month was defined as a second date range for the task-2.
+  start_date_1: "2023-01-01T00:00:00.000"
+  end_date_1: "2023-01-31T23:59:59.000"
+  start_date_2: "2023-02-01T00:00:00.000"
+  end_date_2: "2023-02-28T23:59:59.000"

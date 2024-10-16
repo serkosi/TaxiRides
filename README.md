@@ -34,12 +34,13 @@ A <strong>config.yaml</strong> file is located in the root directory of the proj
 
 5. You're now ready to run the scripts!
 
-## Testing
-To test <strong>task1.py</strong> and <strong>task2.py</strong>, one can use the following commands from the parent TaxiRides directory:
+## Start
+To start the tasks simply run the following commands from the parent TaxiRides directory:
   ```
-python -m unittest tests.test_task1
-python -m unittest tests.test_task2
+python task1.py
+python task2.py
   ```
+
 ## Assumptions / Notes
 * The data is retrieved via an API endpoint and base url was generated with the dataset identifier: 4b4i-vvec belonging to <strong>2023 Yellow Taxi Trip Data</strong>. Relevant details were taken from the documents located in <strong>dicts-metadata</strong> folder.
 * The initial data will be saved after running <strong>task1.py</strong> and will be updated with the ingested data after running <strong>task2.py</strong>.
@@ -48,6 +49,13 @@ python -m unittest tests.test_task2
 * The term <strong>trip length</strong> of a taxi ride can refer to either the distance between the starting and finishing points or the time spent during the ride, depending on the context.
 
     In this project, trip length is considered as the time spent during the ride. That allowed me to keep the data stored as small as possible without considering different variables than the pick-up and drop-off times.
+
+## Testing
+To test <strong>task1.py</strong> and <strong>task2.py</strong>, one can use the following commands from the parent TaxiRides directory:
+  ```
+python -m unittest tests.test_task1
+python -m unittest tests.test_task2
+  ```
 
 ## Scaling Pipeline to Multiple Data Size
 Streaming Processing, Containerization and Orchestration or a Cloud-based Solutions can be useful to handle the pipeline to a larger data sizes that does not fit any more to one machine.

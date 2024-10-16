@@ -12,9 +12,9 @@ The last step was documented at the end of this readme file.
 ## Setup
 1. Clone the repository:
   ```
-    git clone https://github.com/yourusername/your-repo-name.git 
+    git clone https://github.com/serkosi/TaxiRides.git 
 
-    cd your-repo-name
+    cd TaxiRides
   ```
 
 2. Create a virtual environment (optional but recommended):

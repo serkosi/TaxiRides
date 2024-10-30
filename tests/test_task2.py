@@ -4,12 +4,15 @@ import pandas as pd
 #from pandas.testing import assert_frame_equal
 from utils import process_taxi_data, read_parquet_file
 
+# It creates sample data to test different scenarios 
+# (normal case, empty case, single-day case).
 class TestTask2(unittest.TestCase):
 
     def test_read_parquet_file(self):
         file_path = './data/taxi_trips.parquet'
         df = read_parquet_file(file_path)
         self.assertIsInstance(df, pd.DataFrame)
+        # Verifies that the DataFrame is not empty and contains expected columns.
         self.assertGreater(len(df), 0)
         self.assertIn('tpep_pickup_datetime', df.columns)
         self.assertIn('tpep_dropoff_datetime', df.columns)
@@ -38,6 +41,8 @@ class TestTask2(unittest.TestCase):
         # Check if rolling average is calculated correctly
         self.assertAlmostEqual(daily_summary['rolling_average'].iloc[-1], 20.0, places=1)
 
+    # Tests the process_taxi_data function with an empty DataFrame.
+    # Ensures the function handles empty input correctly, returning empty result structures.
     def test_process_taxi_data_empty(self):
         empty_df = pd.DataFrame(columns=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
         result = process_taxi_data(empty_df, choice=2)
@@ -45,6 +50,9 @@ class TestTask2(unittest.TestCase):
         self.assertTrue(trip_lengths.empty)
         self.assertTrue(daily_summary.empty)
 
+    # Tests the process_taxi_data function with data from a single day.
+    # Verifies correct calculation of daily trip time and rolling average 
+    # for a single-day dataset.
     def test_process_taxi_data_single_day(self):
         df = pd.DataFrame({
             'tpep_pickup_datetime': pd.date_range(start='2023-01-01', periods=24, freq='h'),

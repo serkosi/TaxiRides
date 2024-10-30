@@ -90,21 +90,52 @@ class TestTask1(unittest.TestCase):
         })
         assert_frame_equal(result, expected)
 
+    # The test function below was revised.
+    # Since the test data (df) contained only trips from a single day, the rolling average was identical to the daily trip time.
+    # That didn't actually test the "rolling" aspect of the average calculation. Therefore, test data was expanded to cover multiple
+    # days and it was ensured that the rolling average calculation is working as expected over these multiple days.
     def test_process_taxi_data(self):
         df = pd.DataFrame({
-            'tpep_pickup_datetime': pd.to_datetime(['2023-01-01 12:00:00', '2023-01-01 13:00:00']),
-            'tpep_dropoff_datetime': pd.to_datetime(['2023-01-01 12:30:00', '2023-01-01 14:00:00'])
+            'tpep_pickup_datetime': pd.to_datetime([
+                '2023-01-01 12:00:00', '2023-01-01 13:00:00',
+                '2023-01-02 12:00:00', '2023-01-02 14:00:00',
+                '2023-01-03 10:00:00', '2023-01-03 11:00:00',
+                '2023-01-04 09:00:00', '2023-01-04 10:30:00',
+                '2023-01-05 11:00:00', '2023-01-05 13:00:00'
+                ]),
+            'tpep_dropoff_datetime': pd.to_datetime([
+                '2023-01-01 12:30:00', '2023-01-01 14:00:00',
+                '2023-01-02 13:00:00', '2023-01-02 16:00:00',
+                '2023-01-03 11:00:00', '2023-01-03 13:00:00',
+                '2023-01-04 10:00:00', '2023-01-04 12:00:00',
+                '2023-01-05 12:00:00', '2023-01-05 15:00:00'
+            ])
         })
-        _, _, result_mean = process_taxi_data(df, 1)
-        self.assertAlmostEqual(result_mean, 1.5)
 
-        _, result_rolling, _ = process_taxi_data(df, 2)
+        # Test mean calculation (for choice-1. The choice structure should be eliminated though.)
+        _, _, result_mean = process_taxi_data(df, 1)
+        self.assertAlmostEqual(result_mean, 2.6) # Mean of daily trip times: (1.5 + 3.0 + 3.0 + 2.5 + 3.0) / 5 = 2.6
+
+        # Test rolling average calculation (choice-2. The choice structure should be eliminated though.)
+        _, daily_summary, result_rolling = process_taxi_data(df, 2)
+    
+        # The rolling average is calculated with a window of 45 days as per the function
+        # However, since we only have 5 days of data, all values will be the same as the cumulative average up to that day
         expected_rolling = pd.DataFrame({
-            'tpep_pickup_datetime': [pd.Timestamp('2023-01-01')],
-            'daily_trip_time (in hours)': [1.5],
-            'rolling_average': [1.5]
+            'tpep_pickup_datetime': pd.to_datetime(['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04', '2023-01-05']),
+            'daily_trip_time (in hours)': [1.5, 3.0, 3.0, 2.5, 3.0],
+            'rolling_average': [1.5, 2.2, 2.5, 2.5, 2.6] # rolling averages are intentionally rounded to 1 decimal place 
+            # to match the original function output requirements
         })
-        assert_frame_equal(result_rolling, expected_rolling)
+
+        pd.testing.assert_frame_equal(result_rolling, expected_rolling)
+
+        # Verify daily_summary
+        expected_daily = pd.DataFrame({
+            'tpep_pickup_datetime': pd.to_datetime(['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04', '2023-01-05']),
+            'daily_trip_time (in hours)': [1.5, 3.0, 3.0, 2.5, 3.0]
+        })
+        pd.testing.assert_frame_equal(daily_summary[expected_daily.columns], expected_daily)
 
 if __name__ == '__main__':
     unittest.main()

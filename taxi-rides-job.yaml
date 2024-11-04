@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: taxi-rides-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: taxi-rides
+        workingDir: /app
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+        - name: data-volume
+          mountPath: /app/data
+        image: ghcr.io/serkosi/taxi-rides:latest
+      restartPolicy: Never
+      imagePullSecrets:
+      - name: ghcr-secret
+      volumes:
+      - name: config-volume
+        configMap:
+          name: taxi-rides-config
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: taxi-rides-pvc
+  ttlSecondsAfterFinished: 3600  # Keep pod around for 1 hour after completion

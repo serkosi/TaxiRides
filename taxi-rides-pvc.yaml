@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: taxi-rides-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath  # Use your default StorageClass name
+  resources:
+    requests:
+      storage: 1Gi

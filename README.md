@@ -73,3 +73,51 @@ Using Docker to containerize the application and employing Kubernetes for orches
 Using Airflow, Astronomer, and a cloud solution such as BigQuery is another approach for scaling my pipeline. Programmatically scheduling workflows, defining the pipeline as a series of tasks (DAGs), triggering it based on certain events and storing it on a serverless data warehouse with complex query capabilities provide significant scaling advantages with large data.
 
 Lastly, Dask might also be a good choice for scaling to a cluster of machines, although I've just started to gain familiarity with it. Dask works in similar interfaces to other Python libraries such as NumPy and Pandas. Handling datasets larger than available RAM of local machine by processing data in chunks is promising for scaling purposes.
+
+### Containerized Application and Kubernetes Orchestration
+Make sure to have Docker and kubectl installed and configured properly.
+1. Create ConfigMap from the config.yaml:
+```
+kubectl create configmap taxi-rides-config --from-file=config.yaml
+```
+2. Create GitHub Container Registry secret (replace with your credentials):
+```
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=YOUR_GITHUB_USERNAME \
+  --docker-password=YOUR_GITHUB_PAT \
+  --docker-email=YOUR_EMAIL
+```
+3. Build and push Docker image:
+```
+docker build -t ghcr.io/serkosi/taxi-rides:latest .
+docker push ghcr.io/serkosi/taxi-rides:latest
+```
+4. Create PVC:
+```
+kubectl apply -f taxi-rides-pvc.yaml
+```
+5. Apply the job:
+```
+kubectl apply -f taxi-rides-job.yaml
+```
+6. Watch the pod status:
+```
+kubectl get pods --watch
+```
+7. Once the pod is running, create local directory and copy data:
+```
+mkdir local-data
+kubectl cp <pod-name>:/app/data/taxi_trips.parquet ./local-data/
+```
+8. To check logs and verify processing:
+```
+kubectl logs -f <pod-name>
+```
+9. When finished, clean up all Kubernetes resources related to the project:
+```
+kubectl delete job taxi-rides-job
+kubectl delete pvc taxi-rides-pvc
+kubectl delete configmap taxi-rides-config
+kubectl delete secret ghcr-secret
+```

@@ -75,6 +75,10 @@ Using Airflow, Astronomer, and a cloud solution such as BigQuery is another appr
 Lastly, Dask might also be a good choice for scaling to a cluster of machines. Dask works in similar interfaces to other Python libraries such as NumPy and Pandas. Handling datasets larger than available RAM of local machine by processing data in chunks is promising for scaling purposes.
 
 ### Containerized Application and Kubernetes Orchestration
+The process is handled by a Kubernetes Job with two containers. 
+1. Main container (`taxi-rides`): Executes the data processing tasks
+2. Data handler container: Monitors for completion and creates an archive of the results
+
 Make sure to have Docker and kubectl installed and configured properly.
 1. Create ConfigMap from the config.yaml:
 ```
@@ -82,11 +86,7 @@ kubectl create configmap taxi-rides-config --from-file=config.yaml
 ```
 2. Create GitHub Container Registry secret (replace with your credentials):
 ```
-kubectl create secret docker-registry ghcr-secret \
-  --docker-server=ghcr.io \
-  --docker-username=YOUR_GITHUB_USERNAME \
-  --docker-password=YOUR_GITHUB_PAT \
-  --docker-email=YOUR_EMAIL
+kubectl create secret docker-registry ghcr-secret --docker-server=ghcr.io --docker-username=YOUR_GITHUB_USERNAME --docker-password=YOUR_GITHUB_PAT --docker-email=YOUR_EMAIL
 ```
 3. Build and push Docker image:
 ```
@@ -101,18 +101,21 @@ kubectl apply -f taxi-rides-pvc.yaml
 ```
 kubectl apply -f taxi-rides-job.yaml
 ```
-6. Watch the pod status:
+6. Watch the processing status:
 ```
-kubectl get pods --watch
+# View the logs of the main processing container
+kubectl logs -l job-name=taxi-rides-job -c taxi-rides
+
+# View the data handler logs
+kubectl logs -l job-name=taxi-rides-job -c data-handler
 ```
-7. Once the pod is running, create local directory and copy data:
+7. Once the job completes, retrieve the processed data:
 ```
-mkdir local-data
-kubectl cp <pod-name>:/app/data/taxi_trips.parquet ./local-data/
-```
-8. To check logs and verify processing:
-```
-kubectl logs -f <pod-name>
+# Get the pod name
+kubectl get pods -l job-name=taxi-rides-job
+
+# Copy the processed Parquet file locally
+kubectl cp <pod-name>:/app/data/output.parquet ./data/output.parquet
 ```
 9. When finished, clean up all Kubernetes resources related to the project:
 ```

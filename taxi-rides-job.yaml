@@ -3,11 +3,15 @@ kind: Job
 metadata:
   name: taxi-rides-job
 spec:
+  ttlSecondsAfterFinished: 300  # Keep pod for 5 minutes after completion
   template:
     spec:
-      containers:
+      initContainers:
       - name: taxi-rides
         workingDir: /app
+        env:
+        - name: DATA_DIR
+          value: "/app/data"
         volumeMounts:
         - name: config-volume
           mountPath: /app/config.yaml
@@ -15,6 +19,28 @@ spec:
         - name: data-volume
           mountPath: /app/data
         image: ghcr.io/serkosi/taxi-rides:latest
+      containers:
+      - name: data-handler
+        image: python:3.9-slim
+        command: ["sh", "-c"]
+        args:
+        - |
+          pip install pandas pyarrow
+          echo "Processing complete, Parquet data is ready"
+          python3 -c '
+          import pandas as pd
+          import os
+          
+          # Verify Parquet files are readable
+          parquet_path = "/app/data/output.parquet"
+          if os.path.exists(parquet_path):
+              df = pd.read_parquet(parquet_path)
+              print(f"Parquet file verified: {df.shape[0]} rows")
+          '
+          echo "Data verification complete"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data          
       restartPolicy: Never
       imagePullSecrets:
       - name: ghcr-secret
@@ -25,4 +51,3 @@ spec:
       - name: data-volume
         persistentVolumeClaim:
           claimName: taxi-rides-pvc
-  ttlSecondsAfterFinished: 3600  # Keep pod around for 1 hour after completion

@@ -75,10 +75,27 @@ Using Airflow, Astronomer, and a cloud solution such as BigQuery is another appr
 Lastly, Dask might also be a good choice for scaling to a cluster of machines. Dask works in similar interfaces to other Python libraries such as NumPy and Pandas. Handling datasets larger than available RAM of local machine by processing data in chunks is promising for scaling purposes.
 
 ### Containerized Application and Kubernetes Orchestration
-The process is handled by a Kubernetes Job with two containers. 
-1. Main container (`taxi-rides`): Executes the data processing tasks
-2. Data handler container: Monitors for completion and creates an archive of the results
+The process follows a sequential processing pattern using Kubernetes Jobs with init container to ensure proper data handling and verification:
+1. Init container (`taxi-rides`): 
+   - Primary container that executes the data processing tasks
+   - Processes raw taxi data and generates a Parquet file (`taxi_trips.parquet`)
+   - Must complete successfully before the data handler starts
+2. Data handler container: 
+   - Verifies the processed data
+   - Ensures the Parquet file is readable and valid
+   - Reports the number of processed rows
+   - Fails explicitly if verification checks don't pass
 
+#### Volume Configuration
+The application uses two volume types:
+- ConfigMap volume: Stores configuration settings
+- PersistentVolumeClaim: Stores processed data and enables data sharing between containers
+
+#### Known Limitations
+- The data retrieval (temporary) pod has a 1-hour lifetime
+- Manual cleanup of the retrieval pod is required after data copying
+
+#### Execution Steps
 Make sure to have Docker and kubectl installed and configured properly.
 1. Create ConfigMap from the config.yaml:
 ```
@@ -109,16 +126,20 @@ kubectl logs -l job-name=taxi-rides-job -c taxi-rides
 # View the data handler logs
 kubectl logs -l job-name=taxi-rides-job -c data-handler
 ```
-7. Once the job completes, retrieve the processed data:
+7. After job completion, data can be retrieved using a temporary pod that mounts the same persistent volume:
 ```
-# Get the pod name
-kubectl get pods -l job-name=taxi-rides-job
+# Create the temporary pod
+kubectl apply -f data-retrieval-pod.yaml
 
-# Copy the processed Parquet file locally
-kubectl cp <pod-name>:/app/data/output.parquet ./data/output.parquet
+# Wait for pod to be ready
+kubectl wait --for=condition=Ready pod/data-retrieval-pod
+
+# Copy the Parquet file locally
+kubectl cp data-retrieval-pod:/app/data/taxi_trips.parquet ./data/taxi_trips.parquet
 ```
 9. When finished, clean up all Kubernetes resources related to the project:
 ```
+kubectl delete pod data-retrieval-pod
 kubectl delete job taxi-rides-job
 kubectl delete pvc taxi-rides-pvc
 kubectl delete configmap taxi-rides-config

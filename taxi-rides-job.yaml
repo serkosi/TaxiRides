@@ -3,7 +3,6 @@ kind: Job
 metadata:
   name: taxi-rides-job
 spec:
-  ttlSecondsAfterFinished: 300  # Keep pod for 5 minutes after completion
   template:
     spec:
       initContainers:
@@ -30,12 +29,16 @@ spec:
           python3 -c '
           import pandas as pd
           import os
+          import sys
           
           # Verify Parquet files are readable
-          parquet_path = "/app/data/output.parquet"
-          if os.path.exists(parquet_path):
-              df = pd.read_parquet(parquet_path)
-              print(f"Parquet file verified: {df.shape[0]} rows")
+          parquet_path = "/app/data/taxi_trips.parquet"
+          if not os.path.exists(parquet_path):
+            print(f"Error: Parquet file not found at {parquet_path}")
+            sys.exit(1)
+
+          df = pd.read_parquet(parquet_path)
+          print(f"Parquet file verified: {df.shape[0]} rows")
           '
           echo "Data verification complete"
         volumeMounts:

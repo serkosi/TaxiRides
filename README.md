@@ -110,7 +110,7 @@ kubectl create secret docker-registry ghcr-secret --docker-server=ghcr.io --dock
 docker build -t ghcr.io/serkosi/taxi-rides:latest .
 docker push ghcr.io/serkosi/taxi-rides:latest
 ```
-4. Create PVC:
+4. Create PVC (Persistent Volume Claim):
 ```
 kubectl apply -f taxi-rides-pvc.yaml
 ```

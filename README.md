@@ -1,4 +1,4 @@
-# Taxi Rides: Demand Trends and Forecasting
+# Taxi-Rides Project
 
 This project collects NYC Yellow Taxi trip records and uses the gathered pickup timestamps to explore demand trends and build a short-horizon machine-learning forecast. The analysis is in the [forecasting notebook](notebooks/taxi_demand_forecasting.ipynb).
 

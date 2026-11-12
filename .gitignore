@@ -1,3 +1,4 @@
 __pycache__
 .vscode
 tests/__pycache__
+data/taxi_trips.parquet
